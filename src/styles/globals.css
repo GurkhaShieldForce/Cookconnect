@@ -1,0 +1,86 @@
+/* src/styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Layer Customizations */
+@layer base {
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-gray-50 text-gray-900;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-orange-600 ring-offset-2;
+  }
+}
+
+/* Component Layer Customizations */
+@layer components {
+  .btn-hover-effect {
+    @apply transition-all duration-200 ease-in-out hover:scale-105;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .input-focus {
+    @apply focus:border-orange-600 focus:ring-1 focus:ring-orange-600;
+  }
+
+  .nav-link {
+    @apply text-gray-600 hover:text-orange-600 transition-colors duration-200;
+  }
+}
+
+/* Custom Utility Classes */
+@layer utilities {
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-in-out;
+  }
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Form Element Styling */
+input, select, textarea {
+  @apply rounded-lg border-gray-300 shadow-sm;
+  @apply focus:border-orange-600 focus:ring-1 focus:ring-orange-600;
+}

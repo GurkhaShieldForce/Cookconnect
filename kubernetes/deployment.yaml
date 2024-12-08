@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homecook-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: homecook-frontend
+  template:
+    metadata:
+      labels:
+        app: homecook-frontend
+    spec:
+      containers:
+      - name: homecook-frontend
+        image: homecook-connect:latest
+        ports:
+        - containerPort: 80

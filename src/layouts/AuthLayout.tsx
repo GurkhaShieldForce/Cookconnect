@@ -7,7 +7,7 @@ interface AuthLayoutProps {
   children: ReactNode;
 }
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-orange-50">
       <div className="container mx-auto p-4">

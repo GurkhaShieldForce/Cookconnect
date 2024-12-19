@@ -1,11 +1,19 @@
-  // src/types/chef.types.ts
-  export interface ChefService {
-    id: string;
-    chefId: string;
-    name: string;
-    description: string;
-    price: number;
-    minimumGuests: number;
-    maximumGuests: number;
-    type: 'private_dinner' | 'cooking_class';
-  }
+// src/types/chef.types.ts
+export interface Chef {
+  id: string;
+  name: string;
+  cuisine: string;
+  bio: string;
+  rating: number;
+  reviews: number;
+  location: string;
+  specialties: string[];
+  imageUrl: string;
+  certifications: Certification[];
+  serviceAreas: string[];
+}
+
+export interface Certification {
+  title: string;
+  organization: string;
+}

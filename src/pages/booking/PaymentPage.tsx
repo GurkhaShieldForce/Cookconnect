@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { PaymentForm } from '../../components/booking/PaymentForm';
 import MainLayout  from '../../layouts/MainLayout';
+import { PaymentFormData } from '../../types/booking.types';
+
 
 interface BookingSummary {
   service: string;
@@ -14,7 +16,7 @@ interface BookingSummary {
 }
 
 export default function PaymentPage() {
-  const [bookingSummary, setBookingSummary] = useState<BookingSummary>({
+  const [bookingSummary] = useState<BookingSummary>({
     service: 'Private Dinner Experience',
     date: 'December 15, 2024',
     time: '7:00 PM',

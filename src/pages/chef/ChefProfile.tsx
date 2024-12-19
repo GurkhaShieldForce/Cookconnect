@@ -1,157 +1,129 @@
-import { useState } from 'react';
-import { Star, Award, Calendar, Clock, MapPin, ChefHat } from 'lucide-react';
+// src/pages/chef/ChefProfile.tsx
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import MainLayout from '../../layouts/MainLayout';
+import { ChefProfileHeader } from '../../components/chef/ChefProfileHeader';
+import { ChefCard } from '../../components/chef/ChefCard';
 
-interface ReviewProps {
-  rating: number;
-  comment: string;
-  author: string;
-  date: string;
-}
+// Featured chef data structure provides comprehensive information about our primary chef
+const featuredChef = {
+  id: '1',  
+  name: "Chef Janaki Baniya",
+  specialty: "Himalayan & Indian Cuisine Specialist",
+  bio: "As a certified chef specializing in authentic Himalayan and Indian cuisine, I bring the rich flavors and traditions of my heritage to your table. Food safety is my top priority - I ensure a meticulous approach to food handling and preparation throughout the entire cooking process. My passion lies in creating memorable dining experiences that not only delight your taste buds but also meet the highest standards of food safety and quality. Each dish I prepare tells a story of tradition while adhering to modern food safety practices.",
+  experience: 15,
+  rating: 4.9,
+  reviewCount: 42,
+  imageUrl: "/api/placeholder/150/150",
+  location: "Fairfax/Herndon Area, Virginia",
+  availability: "Available weekdays and weekends",
+  certifications: [
+    "Certified Food Protection Manager (CFPM) - Virginia Department of Health",
+    "Food Safety Certification - ServSafe®"
+  ],
+  specialties: [
+    'Nepali Cuisine',
+    'North Indian',
+    'Himalayan Specialties',
+    'Festival Dishes',
+    'Traditional Spice Blending',
+    'Vegetarian Options',
+    'Dietary Accommodations'
+  ]
+};
 
-const Review = ({ rating, comment, author, date }: ReviewProps) => (
-  <div className="border-b pb-6">
-    <div className="mb-2 flex items-center gap-2">
-      {[...Array(5)].map((_, index) => (
-        <Star 
-          key={index}
-          className={`h-5 w-5 ${index < rating ? 'text-yellow-400' : 'text-gray-200'}`}
-        />
-      ))}
-    </div>
-    <p className="mb-2 text-gray-600">{comment}</p>
-    <p className="text-sm text-gray-500">- {author}, {date}</p>
-  </div>
-);
+// Local chefs data represents other verified chefs in our service area
+const localChefs = [
+  {
+    id: '2',
+    name: 'Chef Priya Sharma',
+    cuisine: 'North Indian Cuisine',
+    rating: 4.8,
+    reviews: 36,
+    location: 'Reston/Herndon Area',
+    specialties: ['Punjabi Specialties', 'Vegetarian'],
+    imageUrl: '/api/placeholder/100/100'
+  },
+  {
+    id: '3',
+    name: 'Chef Pemba Sherpa',
+    cuisine: 'Nepali & Tibetan Cuisine',
+    rating: 4.7,
+    reviews: 29,
+    location: 'Fairfax Area',
+    specialties: ['Momos Specialist', 'Traditional'],
+    imageUrl: '/api/placeholder/100/100'
+  },
+  {
+    id: '4',
+    name: 'Chef Raj Kumar',
+    cuisine: 'South Indian Cuisine',
+    rating: 4.9,
+    reviews: 32,
+    location: 'Vienna/Fairfax Area',
+    specialties: ['Dosa Specialist', 'Authentic'],
+    imageUrl: '/api/placeholder/100/100'
+  }
+];
 
-export default function ChefProfile() {
-  const [selectedDate, setSelectedDate] = useState<string>('');
+export default function ChefProfilePage() {
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const handleConsultationRequest = () => {
-    console.log('Consultation requested for:', selectedDate);
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 1000);
+  }, []);
+
+  const handleBookNow = () => {
+    navigate('/booking');
   };
 
+  const handleViewProfile = (chefId: string) => {
+    navigate(`/chef/${chefId}`);
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-gray-600">Loading chef profile...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-orange-50">
-      <div className="relative h-64 bg-orange-600">
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
-      </div>
+    <MainLayout>
+      <div className="container mx-auto px-6 py-8">
+        {/* Featured Chef Profile Section */}
+        <ChefProfileHeader 
+          chef={featuredChef}
+          onBookNow={handleBookNow}
+        />
 
-      <div className="container mx-auto px-6">
-        <div className="relative -mt-20 mb-8">
-          <div className="rounded-2xl bg-white p-8 shadow-xl">
-            <div className="flex flex-wrap gap-8">
-              <img 
-                src="/api/placeholder/160/160" 
-                alt="Chef Portrait" 
-                className="h-40 w-40 rounded-xl object-cover shadow-lg"
+        {/* Local Chefs Section */}
+        <div className="mt-16">
+          <h2 className="mb-8 text-3xl font-bold text-gray-800">
+            More Chefs in Fairfax/Herndon Area
+          </h2>
+          
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {localChefs.map((chef) => (
+              <ChefCard
+                key={chef.id}
+                name={chef.name}
+                cuisine={chef.cuisine}
+                rating={chef.rating}
+                reviews={chef.reviews}
+                location={chef.location}
+                specialties={chef.specialties}
+                imageUrl={chef.imageUrl}
+                onViewProfile={() => handleViewProfile(chef.id)}
               />
-              <div className="flex-grow">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Chef Maria Santos</h1>
-                    <p className="text-lg text-gray-600">Mediterranean & Spanish Cuisine Specialist</p>
-                  </div>
-                  <button 
-                    onClick={handleConsultationRequest}
-                    className="rounded-full bg-orange-600 px-8 py-3 text-white shadow-lg transition-all hover:bg-orange-700"
-                  >
-                    Book Consultation
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-400" />
-                    <span className="font-medium">4.9</span>
-                    <span className="text-gray-600">(124 reviews)</span>
-                  </div>
-                  <span className="text-gray-600">|</span>
-                  <span className="text-gray-600">15 years experience</span>
-                  <span className="text-gray-600">|</span>
-                  <span className="text-gray-600">500+ meals served</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <section className="mb-8 rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-2xl font-semibold">About</h2>
-              <p className="text-gray-600">
-                Classically trained with 15 years of experience in Mediterranean and Spanish cuisine. 
-                Specializing in authentic paella, tapas, and regional Spanish dishes. Available for 
-                private dining experiences, cooking classes, and special events.
-              </p>
-            </section>
-
-            <section className="mb-8 rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-2xl font-semibold">Specialties</h2>
-              <div className="flex flex-wrap gap-3">
-                {['Paella', 'Tapas', 'Seafood', 'Mediterranean', 'Spanish Cuisine'].map(specialty => (
-                  <span key={specialty} className="rounded-full bg-orange-100 px-4 py-2 text-orange-800">
-                    {specialty}
-                  </span>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-6 text-2xl font-semibold">Reviews</h2>
-              <div className="space-y-6">
-                <Review 
-                  rating={5}
-                  comment="Chef Maria created an incredible Spanish feast for my dinner party. Her paella was absolutely authentic and the tapas selection was outstanding."
-                  author="John D."
-                  date="2 weeks ago"
-                />
-              </div>
-            </section>
-          </div>
-
-          <div className="space-y-8">
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-xl font-semibold">Booking Information</h2>
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-800">Base Rate</h3>
-                  <p className="text-gray-600">Starting at $250 per session</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Availability</h3>
-                  <p className="text-gray-600">Available evenings and weekends</p>
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">Service Area</h3>
-                  <p className="text-gray-600">Greater Boston Area</p>
-                </div>
-                <button 
-                  onClick={handleConsultationRequest}
-                  className="w-full rounded-full bg-orange-600 py-3 text-white shadow-lg transition-all hover:bg-orange-700"
-                >
-                  Check Available Dates
-                </button>
-              </div>
-            </section>
-
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h2 className="mb-4 text-xl font-semibold">Credentials</h2>
-              <div className="space-y-4">
-                {[
-                  'Certified Culinary Professional',
-                  'ServSafe Certified',
-                  '15+ Years Experience'
-                ].map(credential => (
-                  <div key={credential} className="flex items-center gap-3">
-                    <Award className="h-5 w-5 text-orange-600" />
-                    <span className="text-gray-600">{credential}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
+            ))}
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

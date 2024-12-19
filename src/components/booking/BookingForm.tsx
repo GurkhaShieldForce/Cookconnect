@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Calendar, Clock, Users, MapPin } from 'lucide-react';
 import { Button } from '../common/Button';
+import { BookingFormData } from '../../types/booking.types';
 import { Input } from '../common/Input';
 
 interface BookingFormProps {
@@ -9,7 +10,7 @@ interface BookingFormProps {
   onSubmit: (bookingData: BookingFormData) => void;
 }
 
-export function BookingForm({ chefId, onSubmit }: BookingFormProps) {
+export function BookingForm({ onSubmit }: BookingFormProps) {
   const [formData, setFormData] = useState({
     date: '',
     time: '',

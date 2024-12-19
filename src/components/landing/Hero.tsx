@@ -61,6 +61,8 @@ export function Hero() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 transform text-gray-400" />
                 <Input 
                   label=""
+                  value=""
+                  onChange={() => {}} // Add empty handler
                   placeholder="Your Location"
                   icon={<Search className="h-5 w-5" />}
                 />

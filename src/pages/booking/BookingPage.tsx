@@ -1,6 +1,6 @@
 // src/pages/booking/BookingPage.tsx
 import { useState } from 'react';
-import { ChefHat, DollarSign } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { BookingForm } from '../../components/booking/BookingForm';
 import MainLayout  from '../../layouts/MainLayout';
 

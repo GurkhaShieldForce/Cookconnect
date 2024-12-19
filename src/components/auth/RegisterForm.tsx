@@ -1,95 +1,126 @@
-
 // src/components/auth/RegisterForm.tsx
 import { useState } from 'react';
-import { Mail, Lock, User, ChefHat } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
+import { SignupFormData } from '../../types/auth.types';
 
 interface RegisterFormProps {
   userType: 'customer' | 'chef';
+  onSubmit: (data: SignupFormData) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export function RegisterForm({ userType }: RegisterFormProps) {
+export function RegisterForm({ userType, onSubmit, isLoading = false }: RegisterFormProps) {
   const [formData, setFormData] = useState({
-    fullName: '',
     email: '',
     password: '',
-    businessName: ''
+    fullName: '',
+    confirmPassword: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!formData.fullName) {
+      newErrors.fullName = 'Full name is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Implement registration logic
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await onSubmit({
+        ...formData,
+        userType,
+      });
+    } catch (error) {
+      setErrors({
+        submit: error instanceof Error ? error.message : 'Registration failed'
+      });
+    }
   };
 
   return (
-    <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-xl">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {userType === 'chef' && (
-          <Input
-            label="Business Name"
-            value={formData.businessName}
-            onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-            icon={<ChefHat className="h-5 w-5" />}
-            required
-          />
-        )}
-        <Input
-          label="Full Name"
-          value={formData.fullName}
-          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-          icon={<User className="h-5 w-5" />}
-          required
-        />
-        <Input
-          label="Email Address"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          icon={<Mail className="h-5 w-5" />}
-          required
-        />
-        <Input
-          label="Password"
-          type="password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          icon={<Lock className="h-5 w-5" />}
-          required
-        />
-        <Button type="submit" variant="primary" fullWidth>
-          Create Account
-        </Button>
-      </form>
-    </div>
-  );
-}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Input
+        label="Full Name"
+        value={formData.fullName}
+        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+        icon={<User className="h-5 w-5" />}
+        error={errors.fullName}
+        required
+      />
 
-// src/components/auth/AuthTabs.tsx
-interface AuthTabsProps {
-  activeTab: 'customer' | 'chef';
-  onTabChange: (tab: 'customer' | 'chef') => void;
-}
+      <Input
+        label="Email Address"
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        icon={<Mail className="h-5 w-5" />}
+        error={errors.email}
+        required
+      />
 
-export function AuthTabs({ activeTab, onTabChange }: AuthTabsProps) {
-  return (
-    <div className="mb-8 flex rounded-lg bg-gray-100 p-1">
-      <button
-        onClick={() => onTabChange('customer')}
-        className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-          activeTab === 'customer' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-600'
-        }`}
+      <Input
+        label="Password"
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        icon={<Lock className="h-5 w-5" />}
+        error={errors.password}
+        required
+      />
+
+      <Input
+        label="Confirm Password"
+        type="password"
+        value={formData.confirmPassword}
+        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+        icon={<Lock className="h-5 w-5" />}
+        error={errors.confirmPassword}
+        required
+      />
+
+      {errors.submit && (
+        <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">
+          {errors.submit}
+        </div>
+      )}
+
+      <Button 
+        type="submit" 
+        variant="primary" 
+        fullWidth 
+        disabled={isLoading}
       >
-        Customer
-      </button>
-      <button
-        onClick={() => onTabChange('chef')}
-        className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-          activeTab === 'chef' ? 'bg-white shadow-sm text-orange-600' : 'text-gray-600'
-        }`}
-      >
-        Professional Chef
-      </button>
-    </div>
+        {isLoading ? 'Creating Account...' : 'Create Account'}
+      </Button>
+    </form>
   );
 }

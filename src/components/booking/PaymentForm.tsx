@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CreditCard, Lock } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
+import { PaymentFormData } from '../../types/booking.types';
 
 interface PaymentFormProps {
   amount: number;
@@ -10,7 +11,7 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ amount, onSubmit }: PaymentFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<PaymentFormData>({
     cardNumber: '',
     expiryDate: '',
     cvv: '',

@@ -1,3 +1,4 @@
+# kubernetes/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +15,7 @@ spec:
     spec:
       containers:
       - name: homecook-frontend
-        image: homecook-connect:latest
+        image: localhost:5000/homecook-connect:latest
+        imagePullPolicy: Never  # Add this line to use local images
         ports:
         - containerPort: 80

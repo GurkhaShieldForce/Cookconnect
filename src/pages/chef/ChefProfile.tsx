@@ -1,129 +1,56 @@
-// src/pages/chef/ChefProfile.tsx
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import MainLayout from '../../layouts/MainLayout';
-import { ChefProfileHeader } from '../../components/chef/ChefProfileHeader';
-import { ChefCard } from '../../components/chef/ChefCard';
+//src/pages/chef/ChefProfile.tsx
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-// Featured chef data structure provides comprehensive information about our primary chef
-const featuredChef = {
-  id: '1',  
-  name: "Chef Janaki Baniya",
-  specialty: "Himalayan & Indian Cuisine Specialist",
-  bio: "As a certified chef specializing in authentic Himalayan and Indian cuisine, I bring the rich flavors and traditions of my heritage to your table. Food safety is my top priority - I ensure a meticulous approach to food handling and preparation throughout the entire cooking process. My passion lies in creating memorable dining experiences that not only delight your taste buds but also meet the highest standards of food safety and quality. Each dish I prepare tells a story of tradition while adhering to modern food safety practices.",
-  experience: 15,
-  rating: 4.9,
-  reviewCount: 42,
-  imageUrl: "/api/placeholder/150/150",
-  location: "Fairfax/Herndon Area, Virginia",
-  availability: "Available weekdays and weekends",
-  certifications: [
-    "Certified Food Protection Manager (CFPM) - Virginia Department of Health",
-    "Food Safety Certification - ServSafe®"
-  ],
-  specialties: [
-    'Nepali Cuisine',
-    'North Indian',
-    'Himalayan Specialties',
-    'Festival Dishes',
-    'Traditional Spice Blending',
-    'Vegetarian Options',
-    'Dietary Accommodations'
-  ]
-};
+export default function ChefProfile() {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-// Local chefs data represents other verified chefs in our service area
-const localChefs = [
-  {
-    id: '2',
-    name: 'Chef Priya Sharma',
-    cuisine: 'North Indian Cuisine',
-    rating: 4.8,
-    reviews: 36,
-    location: 'Reston/Herndon Area',
-    specialties: ['Punjabi Specialties', 'Vegetarian'],
-    imageUrl: '/api/placeholder/100/100'
-  },
-  {
-    id: '3',
-    name: 'Chef Pemba Sherpa',
-    cuisine: 'Nepali & Tibetan Cuisine',
-    rating: 4.7,
-    reviews: 29,
-    location: 'Fairfax Area',
-    specialties: ['Momos Specialist', 'Traditional'],
-    imageUrl: '/api/placeholder/100/100'
-  },
-  {
-    id: '4',
-    name: 'Chef Raj Kumar',
-    cuisine: 'South Indian Cuisine',
-    rating: 4.9,
-    reviews: 32,
-    location: 'Vienna/Fairfax Area',
-    specialties: ['Dosa Specialist', 'Authentic'],
-    imageUrl: '/api/placeholder/100/100'
-  }
-];
+    useEffect(() => {
+        const handleGitHubCallback = async () => {
+            try {
+                const params = new URLSearchParams(location.search);
+                const code = params.get('code');
+                const state = params.get('state');
 
-export default function ChefProfilePage() {
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+                console.log('Received GitHub callback with:', { code: code?.substring(0, 10), state: state?.substring(0, 10) });
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+                if (!code) {
+                    throw new Error('Authorization code not found');
+                }
 
-  const handleBookNow = () => {
-    navigate('/booking');
-  };
+                // Exchange the authorization code for an access token
+                const response = await fetch('/api/auth/github/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code, state }),
+                });
 
-  const handleViewProfile = (chefId: string) => {
-    navigate(`/chef/${chefId}`);
-  };
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Failed to exchange authorization code:', errorData);
+                    throw new Error('Failed to exchange authorization code');
+                }
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="flex min-h-screen items-center justify-center">
-          <p className="text-gray-600">Loading chef profile...</p>
-        </div>
-      </MainLayout>
-    );
-  }
+                const data = await response.json();
+                console.log('Token received:', data.token);
 
-  return (
-    <MainLayout>
-      <div className="container mx-auto px-6 py-8">
-        {/* Featured Chef Profile Section */}
-        <ChefProfileHeader 
-          chef={featuredChef}
-          onBookNow={handleBookNow}
-        />
+                // Save the token (e.g., in localStorage or context)
+                localStorage.setItem('authToken', data.token);
 
-        {/* Local Chefs Section */}
-        <div className="mt-16">
-          <h2 className="mb-8 text-3xl font-bold text-gray-800">
-            More Chefs in Fairfax/Herndon Area
-          </h2>
-          
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {localChefs.map((chef) => (
-              <ChefCard
-                key={chef.id}
-                name={chef.name}
-                cuisine={chef.cuisine}
-                rating={chef.rating}
-                reviews={chef.reviews}
-                location={chef.location}
-                specialties={chef.specialties}
-                imageUrl={chef.imageUrl}
-                onViewProfile={() => handleViewProfile(chef.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </MainLayout>
-  );
+                // Navigate to the appropriate page after successful login
+                navigate('/dashboard');
+            } catch (error) {
+                console.error('GitHub callback handling failed:', error);
+                // Handle the error, e.g., show an error message, navigate to an error page, etc.
+                navigate('/login');
+            }
+        };
+
+        handleGitHubCallback();
+    }, [location, navigate]);
+
+    return <div>Loading...</div>;
 }

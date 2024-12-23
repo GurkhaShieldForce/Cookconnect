@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../../layouts/AuthLayout';
-import { RegisterForm } from '../../components/auth/RegisterForm';
-import { AuthTabs } from '../../components/auth/AuthTabs';
+import RegisterForm from '../../components/auth/RegisterForm';
+import AuthTabs from '../../components/auth/AuthTabs';
 import { SocialLogin } from '../../components/auth/SocialLogin';
 import { authService } from '../../utils/auth/authService';
 import type { SignupFormData } from '../../types/auth.types';
@@ -18,12 +18,18 @@ export default function RegisterPage() {
             setIsLoading(true);
             await authService.signupWithEmail({
                 ...formData,
-                userType
+                userType,
+                profile: {
+                    firstName: formData.profile?.firstName || '',
+                    lastName: formData.profile?.lastName || '',
+                    bio: formData.profile?.bio || '',
+                    specialties: formData.profile?.specialties || ''
+                }
             });
-            navigate(userType === 'chef' ? '/chef/onboarding' : '/dashboard');
+
+            navigate(userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard');
         } catch (error) {
             console.error('Registration failed:', error);
-            // Here we would typically show an error message to the user
         } finally {
             setIsLoading(false);
         }

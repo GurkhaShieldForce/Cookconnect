@@ -33,21 +33,12 @@ export default function GithubCallback() {
                     window.opener.location.href = '/dashboard';
                     window.close();
                 } else {
-                    console.log('No opener window found');
-                    navigate('/dashboard');  // Changed from navigate('/')
-                }
-
-            } catch (error) {
-                console.error('Authentication failed:', error);
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'GITHUB_AUTH_ERROR',
-                        error: 'Authentication failed'
-                    }, window.location.origin);
-                    window.close();
-                } else {
+                    console.error('No opener window found');
                     navigate('/login');
                 }
+            } catch (error) {
+                console.error('Error handling callback:', error);
+                navigate('/login');
             }
         };
 

@@ -3,30 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../../utils/auth/authService';
 import MainLayout from '../../layouts/MainLayout';
 
-interface UserProfile {
+interface Profile {
     fullName: string;
     email: string;
     location?: string;
     isProfileComplete: boolean;
 }
 
-export default function CustomerDashboard() {
+export default function ChefDashboard() {
     const navigate = useNavigate();
-    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const loadProfile = async () => {
+        const fetchProfile = async () => {
             try {
+                console.log('Fetching current user...');
                 const user = authService.getCurrentUser();
-                
+
                 if (!user) {
-                    throw new Error('No authenticated user found');
+                    console.log('No user found, redirecting to login...');
+                    navigate('/login');
+                    return;
                 }
 
-                if (user.userType !== 'customer') {
-                    navigate('/chef/dashboard');
+                if (user.userType !== 'chef') {
+                    console.log('User is not a chef, redirecting to customer dashboard...');
+                    navigate('/customer/dashboard');
                     return;
                 }
 
@@ -35,6 +39,7 @@ export default function CustomerDashboard() {
                     throw new Error('No authentication token found');
                 }
 
+                console.log('Fetching profile data...');
                 const response = await fetch(`${authService.getBaseUrl}/user/profile`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -46,13 +51,16 @@ export default function CustomerDashboard() {
                     throw new Error('Failed to fetch profile');
                 }
 
-                const profileData: UserProfile = await response.json();
+                const profileData: Profile = await response.json();
+                console.log('Profile data fetched:', profileData);
                 setProfile(profileData);
 
                 if (!profileData.isProfileComplete) {
+                    console.log('Profile is not complete, redirecting to profile setup...');
                     navigate('/profile/setup');
                 }
             } catch (err) {
+                console.error('Error loading profile:', err);
                 if (err instanceof Error) {
                     setError(err.message);
                 } else {
@@ -63,14 +71,14 @@ export default function CustomerDashboard() {
             }
         };
 
-        loadProfile();
+        fetchProfile();
     }, [navigate]);
 
     if (loading) {
         return (
             <MainLayout>
                 <div className="flex items-center justify-center min-h-screen">
-                    <div className="text-lg">Loading your customer dashboard...</div>
+                    <div className="text-lg">Loading your chef dashboard...</div>
                 </div>
             </MainLayout>
         );
@@ -90,7 +98,7 @@ export default function CustomerDashboard() {
         <MainLayout>
             <div className="container mx-auto px-6 py-8">
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h1 className="text-2xl font-bold mb-6">Customer Dashboard</h1>
+                    <h1 className="text-2xl font-bold mb-6">Chef Dashboard</h1>
                     {profile && (
                         <div className="grid gap-6 md:grid-cols-2">
                             <div className="space-y-4">
@@ -111,8 +119,8 @@ export default function CustomerDashboard() {
                                 </div>
                             </div>
                             <div className="space-y-4">
-                                <h2 className="text-xl font-semibold">Order History</h2>
-                                <p className="text-gray-600">Coming soon: View your past orders</p>
+                                <h2 className="text-xl font-semibold">Menu Management</h2>
+                                <p className="text-gray-600">Coming soon: Add and manage your menu items</p>
                             </div>
                         </div>
                     )}

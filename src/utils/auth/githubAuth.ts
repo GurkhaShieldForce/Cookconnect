@@ -1,23 +1,31 @@
 // src/utils/auth/githubAuth.ts
+// src/utils/auth/githubAuth.ts
 import { environmentConfig } from '../../config/environment.config';
 
 export class GithubAuthService {
     private baseUrl = environmentConfig.baseUrl;
 
     async initiateAuth(): Promise<void> {
+        const state = this.generateStateParameter();
+        const authUrl = this.getAuthUrl(state);
+        localStorage.setItem('oauth_state', state);
+
+        return this.handleAuthWindow(authUrl);
+    }
+
+    public getAuthUrl(state: string): string {
         const authUrl = new URL('https://github.com/login/oauth/authorize');
         
-        const params = {
+        const params: { [key: string]: string } = {
             client_id: environmentConfig.auth.github.clientId,
             redirect_uri: environmentConfig.auth.github.redirectUri,
+            state: state,
             scope: 'user:email',
-            state: this.generateStateParameter(),
         };
 
-        authUrl.search = new URLSearchParams(params).toString();
-        localStorage.setItem('oauth_state', params.state);
+        Object.keys(params).forEach(key => authUrl.searchParams.append(key, params[key]));
 
-        return this.handleAuthWindow(authUrl.toString());
+        return authUrl.toString();
     }
 
     private handleAuthWindow(authUrl: string): Promise<void> {
@@ -28,7 +36,7 @@ export class GithubAuthService {
 
         const popup = window.open(
             authUrl,
-            'GitHubAuth',
+            'GithubAuth',
             `width=${width},height=${height},left=${left},top=${top}`
         );
 

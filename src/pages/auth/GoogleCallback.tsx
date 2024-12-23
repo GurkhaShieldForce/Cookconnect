@@ -1,4 +1,3 @@
-// src/pages/auth/GoogleCallback.tsx
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -15,51 +14,42 @@ export default function GoogleCallback() {
 
                 console.log('Received callback with:', { code: code?.substring(0, 10), state: state?.substring(0, 10) });
 
-                if (!code || !state) {
-                    console.error('Missing authentication parameters');
-                    navigate('/login');
-                    return;
+                if (!code) {
+                    throw new Error('Authorization code not found');
                 }
 
-                // Send code back to opener window
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'GOOGLE_AUTH_SUCCESS',
-                        code,
-                        state
-                    }, window.location.origin);
-                    
-                    // Add the dashboard redirect here
-                    window.opener.location.href = '/dashboard';
-                    window.close();
-                } else {
-                    console.log('No opener window found');
-                    navigate('/dashboard');  // Changed from navigate('/')
+                // Exchange the authorization code for an access token
+                const response = await fetch('/api/auth/google/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code, state }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Failed to exchange authorization code:', errorData);
+                    throw new Error('Failed to exchange authorization code');
                 }
 
+                const data = await response.json();
+                console.log('Token received:', data.token);
+
+                // Save the token (e.g., in localStorage or context)
+                localStorage.setItem('authToken', data.token);
+
+                // Navigate to the appropriate page after successful login
+                navigate('/dashboard');
             } catch (error) {
-                console.error('Authentication failed:', error);
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'GOOGLE_AUTH_ERROR',
-                        error: 'Authentication failed'
-                    }, window.location.origin);
-                    window.close();
-                } else {
-                    navigate('/login');
-                }
+                console.error('Google callback handling failed:', error);
+                // Handle the error, e.g., show an error message, navigate to an error page, etc.
+                navigate('/login');
             }
         };
 
         handleCallback();
-    }, [navigate, location]);
+    }, [location, navigate]);
 
-    return (
-        <div className="flex min-h-screen items-center justify-center">
-            <div className="text-center">
-                <h2 className="text-xl font-semibold">Completing authentication...</h2>
-                <p className="text-gray-600">Please wait while we process your sign-in.</p>
-            </div>
-        </div>
-    );
+    return <div>Loading...</div>;
 }

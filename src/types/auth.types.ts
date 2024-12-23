@@ -28,12 +28,20 @@ export interface User {
 }
 
 export interface SignupFormData {
-    email: string;
-    password: string;
-    fullName: string;
-    userType: 'customer' | 'chef';
+  email: string;
+  password: string;
+  confirmPassword: string;
+  userType: 'customer' | 'chef';
+  bio?: string;
+  specialties?: string;
+  profile?: {
+      firstName: string;
+      lastName: string;
+      bio?: string;
+      specialties?: string;
+  };
 }
-  
+
 export interface GoogleAuthConfig {
   clientId: string;
   redirectUri: string;
@@ -53,3 +61,18 @@ export interface AuthWindow extends Window {
     transactionId?: string;
   }
   
+  export interface LoginFormData {
+    email: string;
+    password: string;
+  }
+  
+  export interface LoginResponse extends AuthResponse {
+    user: {
+      id: string;
+      email: string;
+      fullName: string; // Add missing property
+      userType: 'customer' | 'chef';
+      createdAt: Date; // Add missing property
+    };
+    token: string;
+  }

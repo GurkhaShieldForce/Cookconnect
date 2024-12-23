@@ -3,15 +3,19 @@ export interface Chef {
   id: string;
   name: string;
   cuisine: string;
-  bio: string;
+  specialty?: string;
+  bio?: string;
+  experience?: number;
   rating: number;
   reviews: number;
-  location: string;
-  specialties: string[];
   imageUrl: string;
-  certifications: Certification[];
+  location: string;
+  availability?: string;
+  certifications?: string[];
+  specialties: string[];
   serviceAreas: string[];
 }
+
 
 export interface Certification {
   title: string;

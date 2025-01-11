@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../../layouts/MainLayout';
-import { Star, MapPin, Clock, ChefHat } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Chef } from '../../types/chef.types';
 import { Menu } from '../../types/menu.types';
 import { API_BASE_URL } from '../../config/api.config';

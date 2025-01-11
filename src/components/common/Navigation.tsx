@@ -69,8 +69,7 @@ export function Navigation() {
                   <div 
                     className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 
                       invisible opacity-0 group-hover:visible group-hover:opacity-100
-                      transition-all duration-300 ease-in-out"
-                    style={{ transitionDelay: '0.1s' }}
+                      transition-all duration-300 ease-in-out delay-100"
                   >
                     <Link 
                       to={user?.userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard'}

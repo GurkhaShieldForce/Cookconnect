@@ -1,6 +1,6 @@
 // src/utils/auth/authService.ts
 import { environmentConfig } from '../../config/environment.config';
-import { FacebookAuthService } from './facebookAuth';
+///import { FacebookAuthService } from './facebookAuth';
 import type { User, AuthResponse, SignupFormData } from '../../types/auth.types';
 
 
@@ -22,12 +22,12 @@ export interface ProfileUpdateData {
 export class AuthService {
     private readonly baseUrl: string;
     private authToken: string | null = null; // Add this line
-    private facebookAuth: FacebookAuthService;
+    ///private facebookAuth: FacebookAuthService;
 
     constructor() {
         this.baseUrl = environmentConfig.apiUrl;
         this.authToken = localStorage.getItem('authToken');
-        this.facebookAuth = new FacebookAuthService();
+        ///this.facebookAuth = new FacebookAuthService();
     }
     getBaseUrl(): string {
         return this.baseUrl;

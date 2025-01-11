@@ -7,10 +7,11 @@ import { PaymentFormData } from '../../types/booking.types';
 
 interface PaymentFormProps {
   amount: number;
-  onSubmit: (paymentData: PaymentFormData) => void;
+  onSubmit: (data: PaymentFormData) => Promise<void>;
+  loading: boolean;
 }
 
-export function PaymentForm({ amount, onSubmit }: PaymentFormProps) {
+export function PaymentForm({ amount, onSubmit, loading }: PaymentFormProps) {
   const [formData, setFormData] = useState<PaymentFormData>({
     cardNumber: '',
     expiryDate: '',
@@ -59,8 +60,8 @@ export function PaymentForm({ amount, onSubmit }: PaymentFormProps) {
         required
       />
 
-      <Button type="submit" variant="primary" fullWidth>
-        Pay ${amount}
+      <Button type="submit" variant="primary" fullWidth disabled={loading}>
+        {loading ? 'Processing...' : `Pay $${amount}`}
       </Button>
     </form>
   );

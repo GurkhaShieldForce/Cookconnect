@@ -1,29 +1,64 @@
 // src/pages/auth/Register.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // Add this import
 import AuthLayout from '../../layouts/AuthLayout';
-import { RegisterForm } from '../../components/auth/RegisterForm';
-import { AuthTabs } from '../../components/auth/AuthTabs';
+import RegisterForm from '../../components/auth/RegisterForm';
+import AuthTabs from '../../components/auth/AuthTabs';
 import { SocialLogin } from '../../components/auth/SocialLogin';
 import { authService } from '../../utils/auth/authService';
 import type { SignupFormData } from '../../types/auth.types';
 
 export default function RegisterPage() {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Add this hook
     const [userType, setUserType] = useState<'customer' | 'chef'>('customer');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null); // Add error state
 
     const handleRegister = async (formData: SignupFormData) => {
         try {
             setIsLoading(true);
-            await authService.signupWithEmail({
+            setError(null); // Clear any previous errors
+
+            // Log the data being sent for debugging
+            console.log('Attempting registration with:', {
                 ...formData,
-                userType
+                userType,
+                profile: {
+                    firstName: formData.profile?.firstName || '',
+                    lastName: formData.profile?.lastName || '',
+                    bio: formData.profile?.bio || '',
+                    specialties: formData.profile?.specialties || ''
+                }
             });
-            navigate(userType === 'chef' ? '/chef/onboarding' : '/dashboard');
+
+            // Call the authentication service to register
+            const response = await authService.signupWithEmail({
+                ...formData,
+                userType,
+                profile: {
+                    firstName: formData.profile?.firstName || '',
+                    lastName: formData.profile?.lastName || '',
+                    bio: formData.profile?.bio || '',
+                    specialties: formData.profile?.specialties || ''
+                }
+            });
+
+            // Store the authentication token
+            localStorage.setItem('authToken', response.token);
+            
+            // Store user information
+            localStorage.setItem('user', JSON.stringify(response.user));
+
+            // Navigate based on user type
+            if (response.user.userType === 'chef') {
+                navigate('/chef/dashboard');
+            } else {
+                navigate('/customer/dashboard');
+            }
+
         } catch (error) {
-            console.error('Registration failed:', error);
-            // Here we would typically show an error message to the user
+            console.error('Registration error:', error);
+            setError(error instanceof Error ? error.message : 'Registration failed. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -36,6 +71,11 @@ export default function RegisterPage() {
                     Create Your Account
                 </h1>
                 <div className="mx-auto max-w-md">
+                    {error && (
+                        <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+                            {error}
+                        </div>
+                    )}
                     <AuthTabs activeTab={userType} onTabChange={setUserType} />
                     <div className="rounded-xl bg-white p-8 shadow-xl">
                         <RegisterForm

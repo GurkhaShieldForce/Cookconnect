@@ -8,6 +8,7 @@ export interface User {
 export interface AuthResponse {
     user: User;
     token: string;
+    isNewUser?: boolean;
 }
 
 export interface SignupFormData {
@@ -26,7 +27,7 @@ export interface GoogleAuthResponse {
 
 export interface UserProfile {
     id: string;
-    userId: string;
+    name: string;
     email: string;
     fullName: string;
     userType: 'customer' | 'chef';

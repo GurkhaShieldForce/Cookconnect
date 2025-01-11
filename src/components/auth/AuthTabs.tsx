@@ -1,31 +1,33 @@
-// src/components/auth/AuthTabs.tsx
-import { useCallback } from 'react';
+import React from 'react';
 
 interface AuthTabsProps {
-  activeTab: 'customer' | 'chef';
-  onTabChange: (tab: 'customer' | 'chef') => void;
+ activeTab: 'customer' | 'chef';
+ onTabChange: (tab: 'customer' | 'chef') => void;
 }
 
-export function AuthTabs({ activeTab, onTabChange }: AuthTabsProps) {
-  const handleTabChange = useCallback((tab: 'customer' | 'chef') => {
-    onTabChange(tab);
-  }, [onTabChange]);
+const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, onTabChange }) => {
+ return (
+   <div className="flex w-full rounded-lg bg-gray-100 p-1">
+     <button
+       className={`flex-1 rounded-md py-2 text-sm font-medium transition-all
+         ${activeTab === 'customer' 
+           ? 'bg-white text-gray-900 shadow-sm' 
+           : 'text-gray-500 hover:text-gray-700'}`}
+       onClick={() => onTabChange('customer')}
+     >
+       Customer
+     </button>
+     <button  
+       className={`flex-1 rounded-md py-2 text-sm font-medium transition-all
+         ${activeTab === 'chef'
+           ? 'bg-white text-gray-900 shadow-sm'
+           : 'text-gray-500 hover:text-gray-700'}`}
+       onClick={() => onTabChange('chef')}
+     >
+       Chef
+     </button>
+   </div>
+ );
+};
 
-  return (
-    <div className="mb-8 flex rounded-lg bg-gray-100 p-1">
-      {['customer', 'chef'].map((tab) => (
-        <button
-          key={tab}
-          onClick={() => handleTabChange(tab as 'customer' | 'chef')}
-          className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-            activeTab === tab 
-              ? 'bg-white shadow-sm text-orange-600' 
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          {tab === 'customer' ? 'Customer' : 'Professional Chef'}
-        </button>
-      ))}
-    </div>
-  );
-}
+export default AuthTabs;

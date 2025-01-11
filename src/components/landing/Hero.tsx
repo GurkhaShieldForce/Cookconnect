@@ -50,7 +50,10 @@ export function Hero() {
             <div className="flex flex-wrap gap-4">
               <div className="relative flex-grow">
                 <Globe2 className="absolute left-4 top-1/2 -translate-y-1/2 transform text-gray-400" />
-                <select className="w-full appearance-none rounded-full border bg-transparent py-4 pl-12 pr-4">
+                <select 
+                  title="Select Cuisine Type"
+                  className="w-full appearance-none rounded-full border bg-transparent py-4 pl-12 pr-4"
+                >
                   <option>Select Cuisine</option>
                   {cuisineTypes.map(cuisine => (
                     <option key={cuisine}>{cuisine}</option>

@@ -5,19 +5,32 @@ import AuthLayout from '../../layouts/AuthLayout';
 import { LoginForm } from '../../components/auth/LoginForm';
 import { SocialLogin } from '../../components/auth/SocialLogin';
 import { authService } from '../../utils/auth/authService';
+import { LoginFormData } from '../../types/auth.types';
 
 export default function LoginPage() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = async (formData: { email: string; password: string }) => {
+    const handleLogin = async (formData: LoginFormData) => {
         try {
             setIsLoading(true);
+            setError(null);
+            
             const response = await authService.login(formData.email, formData.password);
-            navigate(response.user.userType === 'chef' ? '/chef/dashboard' : '/dashboard');
+            
+            // Add small delay to allow state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Navigate based on user type
+            if (response.user.userType === 'chef') {
+                navigate('/chef/dashboard');
+            } else {
+                navigate('/customer/dashboard'); // Note: Changed from '/dashboard' to be more specific
+            }
         } catch (error) {
             console.error('Login failed:', error);
-            // Here we would typically show an error message to the user
+            setError(error instanceof Error ? error.message : 'Login failed. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -31,6 +44,11 @@ export default function LoginPage() {
                 </h1>
                 <div className="mx-auto max-w-md">
                     <div className="rounded-xl bg-white p-8 shadow-xl">
+                        {error && (
+                            <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+                                {error}
+                            </div>
+                        )}
                         <LoginForm 
                             onSubmit={handleLogin}
                             isLoading={isLoading}

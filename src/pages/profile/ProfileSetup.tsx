@@ -1,97 +1,169 @@
 // src/pages/profile/ProfileSetup.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '../../utils/auth/authService';
+import { useUser } from '../../contexts/UserContext';
+import { api } from '../../config/api.config';
+
+
 
 export default function ProfileSetup() {
-    const navigate = useNavigate();
-    const [userType, setUserType] = useState<'customer' | 'chef'>('customer');
-    const [formData, setFormData] = useState({
-        fullName: '',
-        phoneNumber: '',
-        location: '',
-    });
+  const navigate = useNavigate();
+  const { user, setUser } = useUser();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await authService.createUserProfile({
-                ...formData,
-                userType,
-            });
+  // Pre-fill userType from registration
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    bio: '',
+    location: '',
+    specialties: user?.userType === 'chef' ? '' : undefined,
+  });
 
-            // Redirect based on user type
-            navigate(userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard');
-        } catch (error) {
-            console.error('Profile setup failed:', error);
-        }
-    };
+  // Redirect if profile is already set up
+  useEffect(() => {
+    if (user?.profile?.firstName) {
+      navigate(user.userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard');
+    }
+  }, [user, navigate]);
 
-    return (
-        <div className="container mx-auto max-w-2xl px-6 py-12">
-            <h1 className="mb-8 text-3xl font-bold text-center">Complete Your Profile</h1>
-            <div className="rounded-xl bg-white p-8 shadow-lg">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="mb-6">
-                        <label className="mb-2 block text-lg font-medium">I want to...</label>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                type="button"
-                                onClick={() => setUserType('customer')}
-                                className={`p-4 rounded-lg border-2 ${
-                                    userType === 'customer' ? 'border-orange-600' : 'border-gray-200'
-                                }`}
-                            >
-                                Order Food
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setUserType('chef')}
-                                className={`p-4 rounded-lg border-2 ${
-                                    userType === 'chef' ? 'border-orange-600' : 'border-gray-200'
-                                }`}
-                            >
-                                Cook & Sell Food
-                            </button>
-                        </div>
-                    </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-                    {/* Profile form fields */}
-                    <div className="space-y-4">
-                        <input
-                            type="text"
-                            placeholder="Full Name"
-                            value={formData.fullName}
-                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                            className="w-full rounded-lg border p-3"
-                            required
-                        />
-                        <input
-                            type="tel"
-                            placeholder="Phone Number"
-                            value={formData.phoneNumber}
-                            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                            className="w-full rounded-lg border p-3"
-                            required
-                        />
-                        <input
-                            type="text"
-                            placeholder="Location"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full rounded-lg border p-3"
-                            required
-                        />
-                    </div>
+    try {
+      const response = await api.fetch('/api/user/profile/setup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          profile: formData
+        })
+      });
 
-                    <button
-                        type="submit"
-                        className="w-full rounded-full bg-orange-600 py-3 text-white hover:bg-orange-700"
-                    >
-                        Complete Setup
-                    </button>
-                </form>
+      if (!response.ok) {
+        throw new Error('Failed to set up profile');
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
+
+      // Redirect to appropriate dashboard
+      navigate(user?.userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to set up profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white py-12">
+      <div className="container mx-auto px-6">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-3xl font-bold text-center mb-8">
+            Complete Your Profile
+          </h1>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
+              {error}
             </div>
+          )}
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    title="First Name"
+                    placeholder="Enter your first name"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    title="Last Name"
+                    placeholder="Enter your last name"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  placeholder="e.g., Washington, DC"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Bio
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                  placeholder={user?.userType === 'chef' 
+                    ? "Tell us about your culinary experience..." 
+                    : "Tell us about yourself..."}
+                />
+              </div>
+
+              {user?.userType === 'chef' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Specialties
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.specialties}
+                    onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500"
+                    placeholder="e.g., Italian, French, Pastries (comma-separated)"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-orange-600 text-white py-2 px-4 rounded-full hover:bg-orange-700 disabled:opacity-50"
+              >
+                {loading ? 'Setting up...' : 'Complete Setup'}
+              </button>
+            </form>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }

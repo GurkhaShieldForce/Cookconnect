@@ -1,26 +1,44 @@
 // src/utils/auth/googleAuth.ts
 import { environmentConfig } from '../../config/environment.config';
 
+export interface AuthResponse {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+}
+
+export interface GoogleAuthResponse {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+}
+
 export class GoogleAuthService {
     private baseUrl = environmentConfig.baseUrl;
 
     async initiateAuth(): Promise<void> {
+        const state = this.generateStateParameter();
+        const authUrl = this.getAuthUrl(state);
+        localStorage.setItem('oauth_state', state);
+
+        return this.handleAuthWindow(authUrl);
+    }
+
+    public getAuthUrl(state: string): string {
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
         
-        const params = {
+        const params: { [key: string]: string } = {
             client_id: environmentConfig.auth.google.clientId,
             redirect_uri: environmentConfig.auth.google.redirectUri,
             response_type: 'code',
             scope: 'email profile',
             access_type: 'offline',
-            state: this.generateStateParameter(),
-            prompt: 'select_account'
+            state: state,
         };
 
-        authUrl.search = new URLSearchParams(params).toString();
-        localStorage.setItem('oauth_state', params.state);
+        Object.keys(params).forEach(key => authUrl.searchParams.append(key, params[key]));
 
-        return this.handleAuthWindow(authUrl.toString());
+        return authUrl.toString();
     }
 
     private handleAuthWindow(authUrl: string): Promise<void> {
@@ -85,5 +103,15 @@ export class GoogleAuthService {
         return Array.from(crypto.getRandomValues(new Uint8Array(32)))
             .map(byte => byte.toString(16).padStart(2, '0'))
             .join('');
+    }
+
+    public async handleAuthResponse(response: GoogleAuthResponse): Promise<AuthResponse> {
+        const authData: AuthResponse = {
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+            expiresIn: response.expiresIn,
+        };
+
+        return authData;
     }
 }

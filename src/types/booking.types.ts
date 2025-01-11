@@ -20,6 +20,10 @@ export interface BookingFormData {
   guestCount: string;
   location: string;
   specialRequests?: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  paymentMethod: any; // or use proper Stripe PaymentMethod type if available
 }
 
 export interface PaymentFormData {

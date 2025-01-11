@@ -1,7 +1,10 @@
+// src/pages/dashboard/CustomerDashboard.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../utils/auth/authService';
 import MainLayout from '../../layouts/MainLayout';
+import { ProfileAlert } from '../../components/ProfileAlert';
+
 
 interface UserProfile {
     fullName: string;
@@ -13,6 +16,7 @@ interface UserProfile {
 export default function CustomerDashboard() {
     const navigate = useNavigate();
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [htmlContent, setHtmlContent] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +24,7 @@ export default function CustomerDashboard() {
         const loadProfile = async () => {
             try {
                 const user = authService.getCurrentUser();
-                
+
                 if (!user) {
                     throw new Error('No authenticated user found');
                 }
@@ -35,22 +39,25 @@ export default function CustomerDashboard() {
                     throw new Error('No authentication token found');
                 }
 
-                const response = await fetch(`${authService.getBaseUrl}/user/profile`, {
+                const response = await fetch(`${authService.getBaseUrl}/api/user/profile`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 });
 
+                const contentType = response.headers.get('Content-Type');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch profile');
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Failed to fetch profile');
                 }
 
-                const profileData: UserProfile = await response.json();
-                setProfile(profileData);
-
-                if (!profileData.isProfileComplete) {
-                    navigate('/profile/setup');
+                if (contentType && contentType.includes('application/json')) {
+                    const profileData: UserProfile = await response.json();
+                    setProfile(profileData);
+                } else if (contentType && contentType.includes('text/html')) {
+                    const html = await response.text();
+                    setHtmlContent(html);
                 }
             } catch (err) {
                 if (err instanceof Error) {
@@ -86,38 +93,39 @@ export default function CustomerDashboard() {
         );
     }
 
-    return (
-        <MainLayout>
-            <div className="container mx-auto px-6 py-8">
+    if (htmlContent) {
+        return (
+            <MainLayout>
+                 <div className="container mx-auto px-6 py-8">
                 <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h1 className="text-2xl font-bold mb-6">Customer Dashboard</h1>
+                    <h1 className="text-2xl font-bold mb-4">Welcome, Customer</h1>
+                <ProfileAlert />
                     {profile && (
-                        <div className="grid gap-6 md:grid-cols-2">
-                            <div className="space-y-4">
-                                <h2 className="text-xl font-semibold">Profile Information</h2>
-                                <div className="grid gap-4">
-                                    <div>
-                                        <label className="text-gray-600 block">Name</label>
-                                        <p className="font-medium">{profile.fullName}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-600 block">Email</label>
-                                        <p className="font-medium">{profile.email}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-gray-600 block">Location</label>
-                                        <p className="font-medium">{profile.location || 'Not specified'}</p>
-                                    </div>
+                        <>
+                            <h2 className="text-xl font-semibold mb-6">Profile Information</h2>
+                            <div className="grid gap-4">
+                                <div>
+                                    <label className="text-gray-600 block">Name</label>
+                                    <p className="font-medium">{profile.fullName}</p>
+                                </div>
+                                <div>
+                                    <label className="text-gray-600 block">Email</label>
+                                    <p className="font-medium">{profile.email}</p>
+                                </div>
+                                <div>
+                                    <label className="text-gray-600 block">Location</label>
+                                    <p className="font-medium">{profile.location || 'Not specified'}</p>
                                 </div>
                             </div>
-                            <div className="space-y-4">
-                                <h2 className="text-xl font-semibold">Order History</h2>
-                                <p className="text-gray-600">Coming soon: View your past orders</p>
-                            </div>
-                        </div>
+                        </>
                     )}
+                    <div className="mt-8">
+                        <h2 className="text-xl font-semibold mb-4">Order History</h2>
+                        <p className="text-gray-600">Coming soon: View your past orders</p>
+                    </div>
                 </div>
             </div>
-        </MainLayout>
-    );
+            </MainLayout>
+        );
+    }
 }

@@ -19,6 +19,9 @@ export default function LoginPage() {
             
             const response = await authService.login(formData.email, formData.password);
             
+            // Add small delay to allow state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Navigate based on user type
             if (response.user.userType === 'chef') {
                 navigate('/chef/dashboard');

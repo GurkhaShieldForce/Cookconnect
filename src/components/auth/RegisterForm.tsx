@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
 import { Input } from '../common/Input';
 import { SignupFormData } from '../../types/auth.types';
 
@@ -9,6 +10,7 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ userType, onSubmit, isLoading = false }: RegisterFormProps) {
+  const navigate = useNavigate(); //
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -63,14 +65,21 @@ export default function RegisterForm({ userType, onSubmit, isLoading = false }: 
         }
       };
 
-      await onSubmit(signupData);
-    } catch (error) {
+      await onSubmit(signupData); // Invoke handleRegister via onSubmit
+      if (userType === 'chef') {
+        navigate('/chef/dashboard', { replace: true });
+      } else {
+        navigate('/customer/dashboard', { replace: true });
+      }
+    } 
+    catch (error) {
       setErrors({
         submit: error instanceof Error ? error.message : 'Registration failed'
       });
     }
   };
 
+  
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Input

@@ -2,18 +2,30 @@
 export interface Chef {
   id: string;
   name: string;
-  cuisine: string;
-  specialty?: string;
-  bio?: string;
-  experience?: number;
+  cuisine: string | string[];
+  location: string;
+  profile: {
+    firstName: string;
+    lastName: string;
+    bio: string;
+    specialties: string[];
+    location: string;
+    yearsOfExperience?: number;
+    certifications?: string[];
+    availableForBooking?: boolean;
+  };
   rating: number;
   reviews: number;
-  imageUrl: string;
-  location: string;
-  availability?: string;
-  certifications?: string[];
-  specialties: string[];
-  serviceAreas: string[];
+  imageUrl?: string;
+  pricing?: {
+    baseRate: number;
+    minimumGuests?: number;
+  };
+  availability?: {
+    weekdays: boolean;
+    weekends: boolean;
+    evenings: boolean;
+  };
 }
 
 

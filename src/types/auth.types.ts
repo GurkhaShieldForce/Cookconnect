@@ -5,26 +5,34 @@ export interface User {
   fullName: string;
   userType: 'customer' | 'chef';
   createdAt: Date;
+  profile?: {
+      firstName?: string;
+      lastName?: string;
+      bio?: string;
+      location?: string;
+      specialties?: string[];
+  };
 }
-  
-  export interface Chef extends User {
-    businessName: string;
-    specialties: string[];
-    biography: string;
-    location: string;
-    rating: number;
-    reviewCount: number;
-    availability: {
-      weekdays: boolean;
-      weekends: boolean;
-      evenings: boolean;
-    };
-    certifications: string[];
-  }
 
-  export interface AuthResponse {
-    user: User;
-    token: string;
+  
+export interface Chef extends User {
+  businessName: string;
+  specialties: string[];
+  biography: string;
+  location: string;
+  rating: number;
+  reviewCount: number;
+  availability: {
+    weekdays: boolean;
+    weekends: boolean;
+    evenings: boolean;
+  };
+  certifications: string[];
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
 }
 
 export interface SignupFormData {
@@ -50,29 +58,29 @@ export interface GoogleAuthConfig {
 export interface AuthWindow extends Window {
   googleAuthCallback?: (response: any) => void;
 }
-  
-  
-  export interface PaymentDetails {
-    bookingId: string;
-    amount: number;
-    serviceFee: number;
-    platformFee: number;
-    status: 'pending' | 'processed' | 'failed';
-    transactionId?: string;
-  }
-  
-  export interface LoginFormData {
+
+
+export interface PaymentDetails {
+  bookingId: string;
+  amount: number;
+  serviceFee: number;
+  platformFee: number;
+  status: 'pending' | 'processed' | 'failed';
+  transactionId?: string;
+}
+
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse extends AuthResponse {
+  user: {
+    id: string;
     email: string;
-    password: string;
-  }
-  
-  export interface LoginResponse extends AuthResponse {
-    user: {
-      id: string;
-      email: string;
-      fullName: string; // Add missing property
-      userType: 'customer' | 'chef';
-      createdAt: Date; // Add missing property
-    };
-    token: string;
-  }
+    fullName: string; // Add missing property
+    userType: 'customer' | 'chef';
+    createdAt: Date; // Add missing property
+  };
+  token: string;
+}

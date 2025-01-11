@@ -1,27 +1,39 @@
 // src/components/booking/BookingForm.tsx
 import { useState } from 'react';
 import { Calendar, Clock, Users, MapPin } from 'lucide-react';
-import { Button } from '../common/Button';
-import { BookingFormData } from '../../types/booking.types';
 import { Input } from '../common/Input';
+import { Button } from '../common/Button';
 
 interface BookingFormProps {
   chefId: string;
-  onSubmit: (bookingData: BookingFormData) => void;
+  menuId: string;
+  onSubmit: (data: BookingFormData) => void;
 }
 
-export function BookingForm({ onSubmit }: BookingFormProps) {
-  const [formData, setFormData] = useState({
+interface BookingFormData {
+  date: string;
+  time: string;
+  guestCount: string;
+  location: string;
+  specialRequests: string;
+  chefId: string;
+  menuId: string;
+}
+
+export const BookingForm: React.FC<BookingFormProps> = ({ chefId, menuId, onSubmit }) => {
+  const [formData, setFormData] = useState<BookingFormData>({
     date: '',
     time: '',
     guestCount: '',
     location: '',
-    specialRequests: ''
+    specialRequests: '',
+    chefId,
+    menuId
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({ ...formData, chefId, menuId });
   };
 
   return (
@@ -81,4 +93,4 @@ export function BookingForm({ onSubmit }: BookingFormProps) {
       </Button>
     </form>
   );
-}
+};

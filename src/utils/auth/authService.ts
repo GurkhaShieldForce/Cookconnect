@@ -1,20 +1,10 @@
 // src/utils/auth/authService.ts
 import { environmentConfig } from '../../config/environment.config';
-import { SignupFormData } from '../../types/auth.types'; // Import the SignupFormData type from the appropriate location
+import { FacebookAuthService } from './facebookAuth';
+import type { User, AuthResponse, SignupFormData } from '../../types/auth.types';
 
-// Type definitions
-export interface User {
-    id: string;
-    email: string;
-    fullName: string;
-    userType: 'customer' | 'chef';
-}
 
-export interface AuthResponse {
-    user: User;
-    token: string;
-    isNewUser?: boolean;
-}
+// The AuthService class will handle all authentication-related logic
 
 export interface GoogleAuthResponse {
     email: string;
@@ -32,10 +22,12 @@ export interface ProfileUpdateData {
 export class AuthService {
     private readonly baseUrl: string;
     private authToken: string | null = null; // Add this line
+    private facebookAuth: FacebookAuthService;
 
     constructor() {
         this.baseUrl = environmentConfig.apiUrl;
         this.authToken = localStorage.getItem('authToken');
+        this.facebookAuth = new FacebookAuthService();
     }
     getBaseUrl(): string {
         return this.baseUrl;
@@ -50,15 +42,15 @@ export class AuthService {
                 password: data.password,
                 userType: data.userType,
                 // Only include profile if it exists
-                ...(data.profile && { profile: {
-                    firstName: data.profile.firstName,
-                    lastName: data.profile.lastName,
-                    bio: data.profile.bio || '',
-                    specialties: data.profile.specialties || ''
-                }})
+                profile: {
+                    firstName: data.profile?.firstName,
+                    lastName: data.profile?.lastName,
+                    bio: data.profile?.bio || '',
+                    specialties: data.profile?.specialties || ''
+                }
             };
     
-            console.log('Sending signup payload:', signupPayload);
+            console.log('Attempting signup with payload:', JSON.stringify(signupPayload, null, 2));
     
             const response = await fetch(`${this.baseUrl}/auth/signup`, {
                 method: 'POST',
@@ -81,6 +73,7 @@ export class AuthService {
     
             const result = await response.json();
             this.handleAuthSuccess(result);
+            await this.login(data.email, data.password);
             return result;
         } catch (error) {
             console.error('Signup process failed:', {
@@ -91,6 +84,7 @@ export class AuthService {
             throw error;
         }
     }
+
     async login(email: string, password: string): Promise<AuthResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/auth/login`, {
@@ -99,24 +93,24 @@ export class AuthService {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password }),
+                credentials: 'include'
             });
-
+    
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Login error details:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    errorText
-                });
-                throw new Error(`Login failed: ${errorText || response.statusText}`);
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Login failed: ${response.statusText}`);
             }
-
+    
             const result = await response.json();
+            
+            if (!result.token) {
+                throw new Error('Invalid authentication response: Missing token');
+            }
+    
             this.handleAuthSuccess(result);
             return result;
         } catch (error) {
-            console.error('Login process failed:', error);
             this.handleAuthError(error);
             throw error;
         }
@@ -132,13 +126,23 @@ export class AuthService {
         return this.handleAuthCallback(popup);
     }
 
-    async initiateGithubAuth(): Promise<void> {
-        const state = this.generateStateParameter();
-        const authUrl = this.buildGithubAuthUrl(state);
-        localStorage.setItem('oauth_state', state);
-
-        const popup = this.openAuthWindow(authUrl, 'GithubAuth');
-        return this.handleAuthCallback(popup);
+    async initiateFacebookAuth(): Promise<void> {
+        const FB_APP_ID = import.meta.env.VITE_FACEBOOK_APP_ID;
+        const REDIRECT_URI = `${window.location.origin}/auth/facebook/callback`;
+        
+        const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,public_profile`;
+        
+        // Open the popup
+        const width = 500;
+        const height = 600;
+        const left = window.screenX + (window.outerWidth - width) / 2;
+        const top = window.screenY + (window.outerHeight - height) / 2;
+    
+        window.open(
+            authUrl,
+            'FacebookAuth',
+            `width=${width},height=${height},left=${left},top=${top}`
+        );
     }
 
     async updateProfile(profileData: ProfileUpdateData): Promise<void> {
@@ -193,17 +197,7 @@ export class AuthService {
         return this.buildAuthUrl(authUrl, params);
     }
 
-    private buildGithubAuthUrl(state: string): string {
-        const authUrl = new URL('https://github.com/login/oauth/authorize');
-        const params = {
-            client_id: environmentConfig.auth.github.clientId,
-            redirect_uri: environmentConfig.auth.github.redirectUri,
-            scope: 'user:email',
-            state: state
-        };
 
-        return this.buildAuthUrl(authUrl, params);
-    }
 
     private buildAuthUrl(baseUrl: URL, params: Record<string, string>): string {
         Object.entries(params).forEach(([key, value]) => {
@@ -282,11 +276,16 @@ export class AuthService {
 
     // Authentication State Management
     private handleAuthSuccess(authData: AuthResponse): void {
+        if (!authData.token) {
+            throw new Error('No authentication token received');
+        }
+        
         this.authToken = authData.token;
         localStorage.setItem('authToken', authData.token);
-        localStorage.setItem('user', JSON.stringify(authData.user));
-
         
+        if (authData.user) {
+            localStorage.setItem('user', JSON.stringify(authData.user));
+        }
     }
 
     private handleAuthError(error: unknown): void {
@@ -311,22 +310,54 @@ export class AuthService {
 
     // Public Utility Methods
     getAuthToken(): string | null {
-        return this.authToken || localStorage.getItem('authToken');
+    // First check the instance variable
+    if (this.authToken) {
+        return this.authToken;
     }
 
+    // Then check localStorage
+    const storedToken = localStorage.getItem('authToken');
+    if (storedToken) {
+        this.authToken = storedToken; // Update instance variable
+        return storedToken;
+    }
+
+    return null;
+}
     getCurrentUser(): User | null {
         const userString = localStorage.getItem('user');
-        return userString ? JSON.parse(userString) : null;
+        if (!userString) return null;
+        
+        try {
+            const userData = JSON.parse(userString);
+            // Ensure createdAt is converted to a Date object
+            return {
+                ...userData,
+                createdAt: new Date(userData.createdAt)
+            };
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            return null;
+        }
+    }
+
+    setCurrentUser(user: User): void {
+        localStorage.setItem('user', JSON.stringify({
+            ...user,
+            createdAt: user.createdAt.toISOString() // Store date as ISO string
+        }));
     }
 
     isAuthenticated(): boolean {
         return !!this.getAuthToken();
     }
+    
 
     logout(): void {
         this.authToken = null;
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
+        window.FB?.logout(); // Add this line
     }
 }
 

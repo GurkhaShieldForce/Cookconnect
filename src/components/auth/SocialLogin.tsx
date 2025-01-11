@@ -1,12 +1,12 @@
 // src/components/auth/SocialLogin.tsx
 import { useState } from 'react';
-import { Github, LogIn } from 'lucide-react';
+import { Facebook, LogIn } from 'lucide-react';
 import { Button } from '../common/Button';
 import { authService } from '../../utils/auth/authService';
 import { useNavigate } from 'react-router-dom';
 
 export function SocialLogin() {
-    const [isLoading, setIsLoading] = useState<'google' | 'github' | null>(null);
+    const [isLoading, setIsLoading] = useState<'google' |  'facebook' | null>(null);
     const navigate = useNavigate();
 
     const handleGoogleLogin = async () => {
@@ -21,19 +21,24 @@ export function SocialLogin() {
             setIsLoading(null);
         }
     };
-
-    const handleGithubLogin = async () => {
+    const handleFacebookLogin = async () => {
         try {
-            setIsLoading('github');
-            await authService.initiateGithubAuth();
+            setIsLoading('facebook');
+            await authService.initiateFacebookAuth();
             const user = authService.getCurrentUser();
-            navigate(user?.userType === 'chef' ? '/chef/onboarding' : '/dashboard');
+            // Navigate based on user type after successful login
+            if (user) {
+                navigate(user.userType === 'chef' ? '/chef/dashboard' : '/customer/dashboard');
+            }
         } catch (error) {
-            console.error('Github login failed:', error);
+            console.error('Facebook login failed:', error);
+            // You might want to show an error message to the user here
         } finally {
             setIsLoading(null);
         }
     };
+
+    
 
     return (
         <div className="space-y-4">
@@ -60,14 +65,17 @@ export function SocialLogin() {
 
                 <Button
                     variant="outline"
-                    onClick={handleGithubLogin}
-                    disabled={isLoading === 'github'}
+                    onClick={handleFacebookLogin}
+                    disabled={isLoading === 'facebook'}
                 >
                     <div className="flex items-center justify-center gap-2">
-                        <Github className="h-5 w-5" />
-                        <span>{isLoading === 'github' ? 'Connecting...' : 'Github'}</span>
+                        <Facebook className="h-5 w-5" />
+                        <span>
+                            {isLoading === 'facebook' ? 'Connecting...' : 'Facebook'}
+                        </span>
                     </div>
                 </Button>
+                
             </div>
         </div>
     );

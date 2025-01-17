@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homecook-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: homecook-backend
+  template:
+    metadata:
+      labels:
+        app: homecook-backend
+    spec:
+      containers:
+      - name: homecook-backend
+        image: localhost:5001/homecook-backend:latest
+        imagePullPolicy: Never
+        env:
+        - name: CORS_ORIGIN
+          value: "http://localhost:30080"
+        - name: NODE_ENV
+          value: "production"
+        envFrom:
+        - secretRef:
+            name: app-secrets
+        - configMapRef:
+            name: homecook-config
+        ports:
+        - containerPort: 3001 

@@ -15,36 +15,116 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const Menu = require('./models/Menu');
-
-// Add explicit error handling for missing MongoDB URI
-if (!process.env.MONGODB_URI) {
-    console.error('MONGODB_URI is not defined in environment variables');
-    console.error('Please check your .env file configuration');
-    process.exit(1); // Exit the application
-}
-
-const app = express();
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('MongoDB connected');
-}).catch(err => {
-  console.error('MongoDB connection error:', err);
-});
-
-// Models
 const User = require('./models/User');
 
-// Middleware
+// Initialize express
+const app = express();
+
+// IMPORTANT: Move these middleware declarations BEFORE any routes
+// Middleware setup - must be before routes
+app.use(express.json());  // This must come first to parse JSON bodies
+app.use(express.urlencoded({ extended: true }));  // For parsing URL-encoded bodies
 app.use(cors({ 
   origin: ['http://localhost:5173'],
-  credentials: true 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
-app.use(express.json());
 
+app.use(cors(corsOptions));
+
+
+// Add debug middleware to see incoming requests and bodies
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.path}`);
+  console.log('📦 Request Body:', req.body);
+  next();
+});
+
+// Enhanced MongoDB connection function
+const connectDB = async () => {
+  try {
+    console.log('\n🔄 Attempting to connect to MongoDB...\n');
+    const startTime = Date.now();
+
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverApi: {
+        version: '1',
+        strict: false,
+        deprecationErrors: true,
+      }
+    });
+
+    const db = mongoose.connection.db;
+    const connectionTime = Date.now() - startTime;
+    
+    console.log('✅ MongoDB connection successful!');
+    console.log('⏱️  Connection established in:', connectionTime, 'ms');
+    console.log('\n📊 Database Information:');
+    console.log('- Database Name:', db.databaseName);
+    console.log('- Connection Host:', mongoose.connection.host);
+
+    // Test database operations
+    const collections = await db.listCollections().toArray();
+    console.log('📚 Available collections:', collections.map(c => c.name));
+
+    return true;
+  } catch (error) {
+    console.error('\n❌ MongoDB Connection Error:', error);
+    console.error('\nError Details:');
+    console.error('- Name:', error.name);
+    console.error('- Message:', error.message);
+    if (error.code) console.error('- Code:', error.code);
+    return false;
+  }
+};
+
+// MongoDB connection event listeners
+mongoose.connection.on('connecting', () => {
+  console.log('⏳ Connecting to MongoDB...');
+});
+
+mongoose.connection.on('disconnecting', () => {
+  console.log('⏳ Disconnecting from MongoDB...');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('🔴 MongoDB Error:', err);
+});
+
+// Modified server startup function
+const startServer = async () => {
+  try {
+    // Check for required environment variables
+    if (!process.env.MONGODB_URI) {
+      console.error('❌ MONGODB_URI is not defined in environment variables');
+      console.error('Please check your .env file configuration');
+      process.exit(1);
+    }
+
+    const isConnected = await connectDB();
+    if (!isConnected) {
+      console.error('Failed to connect to MongoDB Atlas. Exiting...');
+      process.exit(1);
+    }
+
+    // Middleware setup
+    app.use(cors({ 
+      origin: ['http://localhost:5173'],
+      credentials: true 
+    }));
+    app.use(express.json());
+
+    // Start the server
+    app.listen(3001, () => {
+      console.log('🚀 Server is running on port 3001');
+    });
+  } catch (error) {
+    console.error('Server startup error:', error);
+    process.exit(1);
+  }
+};
 
 // Auth Routes
 app.post('/auth/signup', async (req, res) => {
@@ -482,6 +562,10 @@ app.get('/api/menus/chef/:chefId', async (req, res) => {
     }
 });
 
-app.listen(3001, () => {
-  console.log('Server is running on port 3001');
+// Add this near your other routes
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Remove the old app.listen and call startServer instead
+startServer();

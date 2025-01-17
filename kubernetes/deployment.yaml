@@ -16,6 +16,10 @@ spec:
       containers:
       - name: homecook-frontend
         image: localhost:5000/homecook-connect:latest
-        imagePullPolicy: Never  # Add this line to use local images
+        imagePullPolicy: Never
         ports:
-        - containerPort: 80
+        - containerPort: 5173
+        env:
+        - name: VITE_API_URL
+          value: "http://homecook-backend:300811"
+          

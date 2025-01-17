@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    worker_processes  1;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /var/run/nginx/nginx.pid;
+    events {
+      worker_connections  1024;
+    }
+    http {
+      include       /etc/nginx/mime.types;
+      default_type  application/octet-stream;
+      server {
+        listen 80;
+        root /usr/share/nginx/html;
+        index index.html;
+        
+        location / {
+          try_files $uri $uri/ /index.html;
+        }
+        
+        location /assets/ {
+          expires 1y;
+          add_header Cache-Control "public, no-transform";
+        }
+      }
+    }

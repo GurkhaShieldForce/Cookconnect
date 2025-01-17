@@ -1,5 +1,7 @@
 // src/config/api.config.ts
-export const API_BASE_URL = 'http://localhost:3001';
+import { environmentConfig } from './environment.config';
+
+export const API_BASE_URL = environmentConfig.apiUrl;
 
 export const api = {
   async fetch(endpoint: string, options: RequestInit = {}) {

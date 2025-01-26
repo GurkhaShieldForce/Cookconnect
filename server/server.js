@@ -25,7 +25,7 @@ const app = express();
 app.use(express.json());  // This must come first to parse JSON bodies
 app.use(express.urlencoded({ extended: true }));  // For parsing URL-encoded bodies
 app.use(cors({ 
-  origin: ['http://localhost:5173'],
+  origin: ['https://cookconnect-six.vercel.app/'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

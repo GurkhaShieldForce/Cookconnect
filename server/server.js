@@ -5,9 +5,6 @@ console.log('Attempting to load .env from:', path.resolve(process.cwd(), '.env')
 
 require('dotenv').config();
 
-// Log all environment variables (be careful with this in production)
-console.log('All environment variables:', process.env);
-
 const express = require('express');
 const mongoose = require('mongoose');
 const { config } = require('./config/config');

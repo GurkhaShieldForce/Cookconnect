@@ -12,7 +12,7 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:1.29.5-alpine3.23
 # Create required directories and set permissions
 RUN mkdir -p /var/run/nginx \
     && mkdir -p /var/cache/nginx \
